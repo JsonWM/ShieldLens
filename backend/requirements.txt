@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+pydantic
+google-genai
+pillow
+numpy
+qreader
+opencv-python-headless
+python-multipart
+python-dotenv
