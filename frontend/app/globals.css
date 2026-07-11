@@ -1,26 +1,54 @@
-@import "tailwindcss";
+/* =====================================================================
+   ShieldLens - Master Stack Core Global Styles (Production GitHub Entry)
+   Enforces absolute minimalist industrial designs with sharp 90-degree lines.
+   ===================================================================== */
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-}
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: monospace, system-ui, sans-serif; border-radius: 0 !important; }
+body { background-color: #ffffff; color: #000000; min-height: 100vh; padding: 2rem 1rem; font-size: 1rem; }
+.container { max-width: 1100px; margin: 0 auto; }
+header { border-bottom: 2px solid #000000; padding-bottom: 1rem; margin-bottom: 2rem; }
+.logo-title { font-size: 1.75rem; font-weight: bold; text-transform: uppercase; color: #000000; letter-spacing: 1px; }
+.main-stack { display: flex; flex-direction: column; gap: 2rem; }
+section { background-color: #fcfcfc; border: 2px solid #000000; padding: 1.75rem; }
+.sec-title { font-size: 1.1rem; font-weight: bold; text-transform: uppercase; margin-bottom: 0.6rem; color: #000000; letter-spacing: 0.5px; }
+.sec-desc { font-size: 0.85rem; color: #444444; margin-bottom: 1.2rem; font-weight: 500; }
+.dropzone-horizontal { position: relative; border: 2px dashed #000000; background-color: #ffffff; padding: 2rem 1.5rem; text-align: center; cursor: pointer; display: flex; align-items: center; justify-content: center; min-height: 120px; width: 100%; transition: background-color 0.1s; }
+.dropzone-horizontal:hover { background-color: #f5f5f5; }
+.prompt-horizontal { display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap; }
+.drop-text { font-size: 1.05rem; font-weight: bold; color: #000000; }
+.drop-sub { font-size: 0.85rem; color: #444444; font-weight: bold; }
+#previewImage { max-height: 160px; width: auto; max-width: 100%; border: 2px solid #000000; object-fit: contain; }
+.url-preview-box { padding: 1rem; border: 2px solid #000000; background-color: #fcfcfc; font-size: 0.95rem; word-break: break-all; max-width: 90%; text-align: left; }
+#clearButton { position: absolute; bottom: 12px; right: 12px; padding: 0.35rem 0.65rem; background: #ffffff; border: 2px solid #000000; color: #000000; font-family: monospace; font-size: 0.85rem; font-weight: bold; cursor: pointer; z-index: 10; }
+#clearButton:hover { background-color: #f5f5f5; }
+.hidden { display: none !important; }
+.state-container { border: 2px dashed #999999; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 2.5rem; color: #333333; font-size: 0.9rem; font-weight: bold; text-transform: uppercase; background-color: #ffffff; min-height: 200px; }
+.spinner { border: 3px solid #e0e0e0; border-top-color: #000000; border-radius: 50% !important; width: 2.5rem; height: 2.5rem; animation: spin 1s linear infinite; margin-bottom: 1rem; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.space-y-6>*+* { margin-top: 1.75rem; }
+.risk-header { padding: 1.25rem; border: 2px solid #000000; display: flex; justify-content: space-between; align-items: center; background-color: #ffffff; }
+.risk-danger { border-color: #d90429; color: #d90429; border-width: 4px; background-color: #fff0f2; }
+.risk-warning { border-color: #f77f00; color: #f77f00; border-width: 4px; background-color: #fff8f0; }
+.risk-safe { border-color: #38b000; color: #38b000; border-width: 4px; background-color: #f1fbf0; }
+.score-lbl { font-size: 12px; text-transform: uppercase; opacity: 0.85; display: block; font-weight: bold; letter-spacing: 0.5px; }
+.score-val { font-size: 2.5rem; font-weight: 900; }
+.score-sub { font-size: 1rem; font-weight: bold; opacity: 0.85; }
+.level-val { font-size: 1.25rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; }
+.meta-grid { display: grid; grid-template-columns: 1fr; gap: 1.25rem; }
+@media (min-width: 480px) { .meta-grid { grid-template-columns: 1fr 1fr; } }
+.meta-box { background-color: #ffffff; border: 2px solid #000000; padding: 1rem; font-size: 0.95rem; }
+.meta-lbl { color: #444444; display: block; text-transform: uppercase; font-size: 11px; font-weight: bold; letter-spacing: 0.5px; }
+.meta-val { color: #000000; font-weight: bold; display: block; margin-top: 0.25rem; font-size: 1.05rem; }
+.meta-val-qr { color: #000000; font-weight: bold; display: block; margin-top: 0.25rem; font-size: 1.05rem; word-break: break-all; text-decoration: underline; }
+.card-box { background-color: #ffffff; border: 2px solid #000000; padding: 1.25rem; }
+.card-title { font-size: 0.9rem; font-weight: bold; text-transform: uppercase; margin-bottom: 0.5rem; color: #000000; letter-spacing: 0.5px; }
+.card-text { font-size: 1rem; color: #111111; line-height: 1.6; font-family: sans-serif; font-weight: 500; }
+.ind-list { display: flex; flex-direction: column; gap: 0.75rem; margin-top: 0.75rem; }
+.ind-item { background-color: #ffffff; border: 2px solid #000000; padding: 1.25rem; display: flex; gap: 1rem; align-items: start; }
+.ind-dot { width: 10px; height: 10px; margin-top: 0.45rem; flex-shrink: 0; }
+.ind-title { font-size: 0.95rem; font-weight: bold; text-transform: uppercase; color: #000000; letter-spacing: 0.5px; }
+.ind-ev { font-size: 0.85rem; color: #333333; font-style: italic; margin-top: 0.25rem; font-weight: bold; }
+.ind-desc { font-size: 0.95rem; color: #111111; margin-top: 0.35rem; line-height: 1.5; font-family: sans-serif; font-weight: 500; }
+.action-box { background-color: #ffffff; border: 2px solid #000000; padding: 1.25rem; display: flex; flex-direction: column; gap: 0.35rem; }
+.action-title { font-size: 0.9rem; font-weight: bold; text-transform: uppercase; color: #000000; letter-spacing: 0.5px; }
+.action-text { font-size: 1rem; color: #000000; font-family: sans-serif; font-weight: bold; line-height: 1.6; }

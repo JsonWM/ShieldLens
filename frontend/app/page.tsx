@@ -1,64 +1,124 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useState, useEffect, DragEvent } from 'react';
+import { FraudAssessmentReport, ViewState } from '@/components/Types';
+import CapturePanel from '@/components/CapturePanel';
+import AnalysisPanel from '@/components/AnalysisPanel';
+
+const BACKEND_URL = 'http://localhost:8000/api/v1/shield-scan';
+
+export default function ShieldLensDashboard() {
+  const [viewState, setViewState] = useState<ViewState>('blank');
+  const [imagePreviewSrc, setImagePreviewSrc] = useState<string>('');
+  const [isUrlTextDetected, setIsUrlTextDetected] = useState<boolean>(false);
+  const [pastedUrlString, setPastedUrlString] = useState<string>('');
+  const [isDragHoverActive, setIsDragHoverActive] = useState<boolean>(false);
+  
+  const [analysisReport, setAnalysisReport] = useState<FraudAssessmentReport>({
+    safety_score: 0, risk_level: '-', brand_impersonated: '-',
+    qr_link_extracted: '-', psychological_trick: '-', indicators_found: [], action_advice: '-'
+  });
+
+  useEffect(() => {
+    const interceptClipboardPaste = async (event: any) => {
+      const clipboardData = event.clipboardData || (window as any).clipboardData;
+      if (!clipboardData) return;
+      const clipboardItems = clipboardData.items;
+      
+      for (let i = 0; i < clipboardItems.length; i++) {
+        if (clipboardItems[i].type.indexOf('image') !== -1) {
+          const file = clipboardItems[i].getAsFile();
+          if (file) executePipelineRouting(file, 'file');
+          break;
+        } else if (clipboardItems[i].type === 'text/plain') {
+          clipboardItems[i].getAsString((rawText: string) => {
+            const cleaned = rawText.trim();
+            if (cleaned.startsWith('http://') || cleaned.startsWith('https://')) {
+              executePipelineRouting(cleaned, 'text-url');
+            }
+          });
+          break;
+        }
+      }
+    };
+    document.addEventListener('paste', interceptClipboardPaste);
+    return () => document.removeEventListener('paste', interceptClipboardPaste);
+  }, []);
+
+  const executePipelineRouting = async (targetPayload: File | string, type: 'file' | 'text-url' | 'url') => {
+    setViewState('loading');
+    
+    if (type === 'file' && typeof targetPayload !== 'string') {
+      setIsUrlTextDetected(false);
+      setImagePreviewSrc(URL.createObjectURL(targetPayload));
+      try {
+        const formData = new FormData();
+        formData.append('file', targetPayload);
+        const res = await fetch(BACKEND_URL, { method: 'POST', body: formData });
+        setAnalysisReport(await res.json());
+        setViewState('result');
+      } catch {
+        triggerCanvasWipeCleanup();
+      }
+    } 
+    else if (type === 'text-url' && typeof targetPayload === 'string') {
+      setIsUrlTextDetected(true);
+      setPastedUrlString(targetPayload);
+      setImagePreviewSrc('');
+      try {
+        const formData = new FormData();
+        formData.append('direct_url', targetPayload);
+        const res = await fetch(BACKEND_URL, { method: 'POST', body: formData });
+        setAnalysisReport(await res.json());
+        setViewState('result');
+      } catch {
+        triggerCanvasWipeCleanup();
+      }
+    }
+  };
+
+  const processDroppedTelemetry = async (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDragHoverActive(false);
+    const dt = event.dataTransfer;
+    if (!dt) return;
+    
+    if (dt.files && dt.files.length > 0) {
+      if (dt.files[0].type.startsWith('image/')) executePipelineRouting(dt.files[0], 'file');
+    } else {
+      const explicitPlainTextStr = dt.getData('text/plain').trim();
+      if (explicitPlainTextStr.startsWith('http://') || explicitPlainTextStr.startsWith('https://')) {
+        executePipelineRouting(explicitPlainTextStr, 'text-url');
+      }
+    }
+  };
+
+  const triggerCanvasWipeCleanup = () => {
+    setImagePreviewSrc('');
+    setIsUrlTextDetected(false);
+    setPastedUrlString('');
+    setViewState('blank');
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <div className="container">
+      <header>
+        <h1 className="logo-title">ShieldLens</h1>
+      </header>
+      <main className="main-stack">
+        <CapturePanel 
+          viewState={viewState}
+          imagePreviewSrc={imagePreviewSrc}
+          isUrlTextDetected={isUrlTextDetected}
+          pastedUrlString={pastedUrlString}
+          isDragHoverActive={isDragHoverActive}
+          onDragStateChange={setIsDragHoverActive}
+          onDropped={processDroppedTelemetry}
+          onFileSelected={(file) => executePipelineRouting(file, 'file')}
+          onClear={triggerCanvasWipeCleanup}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+        <AnalysisPanel viewState={viewState} analysisReport={analysisReport} />
       </main>
     </div>
   );
