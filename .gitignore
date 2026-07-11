@@ -1,0 +1,19 @@
+# Node.js dependencies
+node_modules/
+.next/
+out/
+
+# Python caching & environments
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Environment configurations
+.env
+.env.local
+.env.*.local
+
+# Operating System temporary caches
+.DS_Store
+Thumbs.db
