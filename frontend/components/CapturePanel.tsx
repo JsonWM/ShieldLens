@@ -1,6 +1,8 @@
 'use client';
 
-import { useRef, DragEvent, ChangeEvent } from 'react';
+import { DragEvent, RefObject } from 'react';
+import DropzoneArea from './DropzoneArea';
+import CameraOverlay from './CameraOverlay';
 
 interface CapturePanelProps {
   viewState: string;
@@ -8,10 +10,16 @@ interface CapturePanelProps {
   isUrlTextDetected: boolean;
   pastedUrlString: string;
   isDragHoverActive: boolean;
+  isCameraOpen: boolean;
+  videoRef: RefObject<HTMLVideoElement | null>;
+  canvasRef: RefObject<HTMLCanvasElement | null>;
   onDragStateChange: (active: boolean) => void;
   onDropped: (event: DragEvent<HTMLDivElement>) => void;
-  onFileSelected: (file: File) => void;
+  onFileSelected: (files: FileList) => void;
   onClear: () => void;
+  onTriggerCamera: () => void;
+  onCaptureSnapshot: () => void;
+  onCloseCamera: () => void;
 }
 
 export default function CapturePanel({
@@ -20,84 +28,60 @@ export default function CapturePanel({
   isUrlTextDetected,
   pastedUrlString,
   isDragHoverActive,
+  isCameraOpen,
+  videoRef,
+  canvasRef,
   onDragStateChange,
   onDropped,
   onFileSelected,
-  onClear
+  onClear,
+  onTriggerCamera,
+  onCaptureSnapshot,
+  onCloseCamera
 }: CapturePanelProps) {
-  const nativeFileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleDrag = (e: DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === 'dragenter' || e.type === 'dragover') {
-      onDragStateChange(true);
-    } else if (e.type === 'dragleave') {
-      onDragStateChange(false);
-    }
-  };
-
-  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      onFileSelected(e.target.files[0]);
-    }
-  };
-
   return (
-    <section style={{ position: 'relative' }}>
-      <h2 className="sec-title">01. Capture</h2>
-      <p className="sec-desc">Upload document, paste text URL link, or drag an asset directly.</p>
-
-      <div 
-        className="dropzone-horizontal"
-        style={{ 
-          backgroundColor: isDragHoverActive ? '#f5f5f5' : '#ffffff',
-          borderStyle: isDragHoverActive ? 'solid' : 'dashed'
+    <section style={{ position: 'relative', paddingTop: '1.5rem' }}>
+      {/* Absolute floating operational trigger placed at top right corner */}
+      <button 
+        id="openCamButton" 
+        style={{
+          position: 'absolute', top: '1.5rem', right: '1.75rem',
+          padding: '0.25rem 0.5rem', background: '#ffffff', border: '2px solid #000000',
+          color: '#000000', fontFamily: 'monospace', fontSize: '0.75rem', fontWeight: 'bold',
+          cursor: 'pointer', zIndex: 20
         }}
-        onClick={() => nativeFileInputRef.current?.click()}
-        onDragEnter={handleDrag}
-        onDragOver={handleDrag}
-        onDragLeave={handleDrag}
-        onDrop={onDropped}
+        onClick={(e) => {
+          e.stopPropagation();
+          onTriggerCamera();
+        }}
       >
-        <input 
-          type="file" 
-          ref={nativeFileInputRef} 
-          accept="image/*" 
-          style={{ display: 'none' }} 
-          onChange={handleInputChange}
-        />
+        [ USE CAMERA ]
+      </button>
 
-        {viewState === 'blank' && !imagePreviewSrc && !isUrlTextDetected && (
-          <div className="prompt-horizontal">
-            <span className="drop-text">Click to upload, press Ctrl + V, or paste URL</span>
-            <span className="drop-sub">[IMAGE or LINK]</span>
-          </div>
-        )}
+      <h2 className="sec-title">01. Capture</h2>
+      <p className="sec-desc" style={{ maxWidth: '80%' }}>Upload document, paste text URL link, or drag an asset directly.</p>
 
-        {imagePreviewSrc && !isUrlTextDetected && (
-          <img id="previewImage" src={imagePreviewSrc} alt="Telemetry Canvas Anchor" />
-        )}
+      {/* Render Decoupled Atomic Dropzone Input Workspace */}
+      <DropzoneArea 
+        viewState={viewState}
+        imagePreviewSrc={imagePreviewSrc}
+        isUrlTextDetected={isUrlTextDetected}
+        pastedUrlString={pastedUrlString}
+        isDragHoverActive={isDragHoverActive}
+        onDragStateChange={onDragStateChange}
+        onDropped={onDropped}
+        onFileSelected={onFileSelected}
+        onClear={onClear}
+      />
 
-        {isUrlTextDetected && (
-          <div className="url-preview-box">
-            <strong>[ DIRECT URL MARKER DETECTED ]</strong>
-            <p style={{ marginTop: '0.25rem', fontFamily: 'monospace' }}>{pastedUrlString}</p>
-          </div>
-        )}
-
-        {(imagePreviewSrc || isUrlTextDetected) && (
-          <button 
-            id="clearButton"
-            onClick={(e) => {
-              e.stopPropagation();
-              onClear();
-            }}
-          >
-            [ CLEAR ]
-          </button>
-        )}
-      </div>
+      {/* Render Decoupled Isolated Hardware Camera Portal Overlay */}
+      <CameraOverlay 
+        isOpen={isCameraOpen}
+        videoRef={videoRef}
+        canvasRef={canvasRef}
+        onCapture={onCaptureSnapshot}
+        onClose={onCloseCamera}
+      />
     </section>
   );
 }

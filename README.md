@@ -36,9 +36,7 @@ ShieldLens/
 
 ## The Problem & Our Value
 
-Physical spaces are a blind spot for traditional cybersecurity software. Scammers place fake utility notices on walls, printed parking fines on cars, and untraceable QR codes on public chargers to execute credit card or login credentials theft. 
-
-ShieldLens bridges this gap by giving users a simple, protective web scanner that reads the destination link, checks for domain spoofing, catches urgency-based manipulation tricks, and outputs an immediate safety scorecard.
+In the digital world, scammers constantly use deceptive links on social media and messaging apps to trick users into fake payment zones. At the same time, physical spaces have become a dangerous blind spot for traditional cybersecurity software, where fraudsters place fake utility notices on walls, printed parking fines on cars, and untraceable QR codes on public chargers to execute credit card or login credentials theft.
 
 ---
 

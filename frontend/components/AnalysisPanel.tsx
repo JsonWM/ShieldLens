@@ -36,7 +36,7 @@ export default function AnalysisPanel({ viewState, analysisReport }: AnalysisPan
       {viewState === 'loading' && (
         <div className="state-container">
           <div className="spinner"></div>
-          <p style={{ color: '#000000', fontWeight: 'bold' }}>Analyzing telemetry context markers...</p>
+          <p style={{ color: '#000000', fontWeight: 'bold' }}>Evaluating safety markers...</p>
         </div>
       )}
 
@@ -55,7 +55,7 @@ export default function AnalysisPanel({ viewState, analysisReport }: AnalysisPan
 
           <div className="meta-grid">
             <div className="meta-box">
-              <span className="meta-lbl">Target Entity:</span>
+              <span className="meta-lbl">Company / Org Name:</span>
               <span className="meta-val">{analysisReport.brand_impersonated}</span>
             </div>
             <div className="meta-box">
@@ -65,7 +65,7 @@ export default function AnalysisPanel({ viewState, analysisReport }: AnalysisPan
           </div>
 
           <div className="card-box">
-            <h3 className="card-title">Behavioral Vectors & Urgency Analysis:</h3>
+            <h3 className="card-title">Scam Mechanism:</h3>
             <p className="card-text">{analysisReport.psychological_trick}</p>
           </div>
 

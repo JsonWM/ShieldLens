@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, DragEvent } from 'react';
+import { useState, useEffect, useRef, DragEvent } from 'react';
 import { FraudAssessmentReport, ViewState } from '@/components/Types';
 import CapturePanel from '@/components/CapturePanel';
 import AnalysisPanel from '@/components/AnalysisPanel';
@@ -14,6 +14,12 @@ export default function ShieldLensDashboard() {
   const [pastedUrlString, setPastedUrlString] = useState<string>('');
   const [isDragHoverActive, setIsDragHoverActive] = useState<boolean>(false);
   
+  // --- CAMERA WORKFLOW STATES ---
+  const [isCameraOpen, setIsCameraOpen] = useState<boolean>(false);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const activeStreamRef = useRef<MediaStream | null>(null);
+
   const [analysisReport, setAnalysisReport] = useState<FraudAssessmentReport>({
     safety_score: 0, risk_level: '-', brand_impersonated: '-',
     qr_link_extracted: '-', psychological_trick: '-', indicators_found: [], action_advice: '-'
@@ -77,6 +83,53 @@ export default function ShieldLensDashboard() {
     }
   };
 
+  // --- CAMERA RUNTIME OPERATIONS ---
+  const launchCameraHardware = async () => {
+    try {
+      terminateCameraHardwareFeed();
+      const hardwareStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' },
+        audio: false
+      });
+      activeStreamRef.current = hardwareStream;
+      setIsCameraOpen(true);
+      
+      // Delay reference attachment slightly to allow React portal mount cycles to finish
+      setTimeout(() => {
+        if (videoRef.current) videoRef.current.srcObject = hardwareStream;
+      }, 50);
+    } catch {
+      terminateCameraHardwareFeed();
+    }
+  };
+
+  const captureCameraSnapshotFrame = () => {
+    if (!activeStreamRef.current || !videoRef.current || !canvasRef.current) return;
+
+    const ctx = canvasRef.current.getContext('2d');
+    if (!ctx) return;
+
+    canvasRef.current.width = videoRef.current.videoWidth;
+    canvasRef.current.height = videoRef.current.videoHeight;
+    ctx.drawImage(videoRef.current, 0, 0, canvasRef.current.width, canvasRef.current.height);
+
+    canvasRef.current.toBlob(async (blobPayload) => {
+      if (!blobPayload) return;
+      const snapshotFileInstance = new File([blobPayload], "camera_snapshot.png", { type: "image/png" });
+      terminateCameraHardwareFeed();
+      await executePipelineRouting(snapshotFileInstance, 'file');
+    }, 'image/png');
+  };
+
+  const terminateCameraHardwareFeed = () => {
+    if (activeStreamRef.current) {
+      activeStreamRef.current.getTracks().forEach(track => track.stop());
+      activeStreamRef.current = null;
+    }
+    if (videoRef.current) videoRef.current.srcObject = null;
+    setIsCameraOpen(false);
+  };
+
   const processDroppedTelemetry = async (event: DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     event.stopPropagation();
@@ -85,7 +138,8 @@ export default function ShieldLensDashboard() {
     if (!dt) return;
     
     if (dt.files && dt.files.length > 0) {
-      if (dt.files[0].type.startsWith('image/')) executePipelineRouting(dt.files[0], 'file');
+      const file = dt.files[0];
+      if (file.type.startsWith('image/')) executePipelineRouting(file, 'file');
     } else {
       const explicitPlainTextStr = dt.getData('text/plain').trim();
       if (explicitPlainTextStr.startsWith('http://') || explicitPlainTextStr.startsWith('https://')) {
@@ -107,16 +161,22 @@ export default function ShieldLensDashboard() {
         <h1 className="logo-title">ShieldLens</h1>
       </header>
       <main className="main-stack">
-        <CapturePanel 
+         <CapturePanel 
           viewState={viewState}
           imagePreviewSrc={imagePreviewSrc}
           isUrlTextDetected={isUrlTextDetected}
           pastedUrlString={pastedUrlString}
           isDragHoverActive={isDragHoverActive}
+          isCameraOpen={isCameraOpen}
+          videoRef={videoRef}
+          canvasRef={canvasRef}
           onDragStateChange={setIsDragHoverActive}
           onDropped={processDroppedTelemetry}
-          onFileSelected={(file) => executePipelineRouting(file, 'file')}
+          onFileSelected={(files: FileList) => files.length && executePipelineRouting(files[0], 'file')}
           onClear={triggerCanvasWipeCleanup}
+          onTriggerCamera={launchCameraHardware}
+          onCaptureSnapshot={captureCameraSnapshotFrame}
+          onCloseCamera={terminateCameraHardwareFeed}
         />
         <AnalysisPanel viewState={viewState} analysisReport={analysisReport} />
       </main>
